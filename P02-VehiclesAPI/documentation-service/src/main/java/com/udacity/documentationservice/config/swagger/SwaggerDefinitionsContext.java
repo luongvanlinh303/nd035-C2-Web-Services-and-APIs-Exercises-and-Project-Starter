@@ -1,0 +1,43 @@
+package com.udacity.documentationservice.config.swagger;
+
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import springfox.documentation.swagger.web.SwaggerResource;
+
+/**
+ * In-Memory store to hold Swagger API Definition as JSON
+ */
+@Component
+@Scope(scopeName = ConfigurableBeanFactory.SCOPE_SINGLETON)
+public class SwaggerDefinitionsContext {
+
+  private final ConcurrentHashMap<String, String> serviceDescriptions;
+
+  private SwaggerDefinitionsContext() {
+    serviceDescriptions = new ConcurrentHashMap<>();
+  }
+
+  public void addServiceDefinition(String serviceId, String serviceDescription) {
+    serviceDescriptions.put(serviceId, serviceDescription);
+  }
+
+  public String getSwaggerDefinition(String serviceId) {
+    return this.serviceDescriptions.get(serviceId);
+  }
+
+  public List<SwaggerResource> getSwaggerDefinitions() {
+    return serviceDescriptions.keySet().stream()
+        .map(serviceId -> {
+          SwaggerResource resource = new SwaggerResource();
+          resource.setLocation("/service/" + serviceId);
+          resource.setName(serviceId);
+          resource.setSwaggerVersion("2.0");
+          return resource;
+        })
+        .collect(Collectors.toList());
+  }
+}
